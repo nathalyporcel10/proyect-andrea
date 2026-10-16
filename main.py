@@ -15,7 +15,30 @@ app = FastAPI(
     version=settings.app_version,
     description="API para administrar pacientes y sus consultas médicas.",
 )
+
+
+@app.middleware("http")
+async def fix_vercel_path(request: Request, call_next):
+    path = request.scope.get("path", "")
+    for prefix in ("/api/index.py", "/api/index"):
+        if path == prefix:
+            request.scope["path"] = "/"
+            break
+        elif path.startswith(prefix + "/"):
+            request.scope["path"] = path[len(prefix):]
+            break
+    return await call_next(request)
+
+
 app.include_router(patients_router, prefix=settings.api_v1_prefix)
+
+
+@app.get("/debug-path", tags=["Inicio"])
+def debug_path(request: Request) -> dict:
+    return {
+        "url_path": request.url.path,
+        "scope_path": request.scope.get("path"),
+    }
 
 
 @app.get("/", tags=["Inicio"])
