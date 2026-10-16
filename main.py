@@ -42,8 +42,12 @@ def debug_path(request: Request) -> dict:
 
 
 @app.get("/", tags=["Inicio"])
-def inicio() -> dict[str, str]:
-    return {"mensaje": f"{settings.app_name} está funcionando"}
+def inicio(request: Request) -> dict:
+    return {
+        "mensaje": f"{settings.app_name} está funcionando",
+        "headers": dict(request.headers),
+        "scope": {k: str(v) for k, v in request.scope.items() if k in ("path", "raw_path", "query_string", "root_path")},
+    }
 
 
 @app.get("/health", tags=["Inicio"])
