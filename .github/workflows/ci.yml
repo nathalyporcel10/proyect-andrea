@@ -11,19 +11,37 @@ permissions:
 
 jobs:
   build:
+    name: Build (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12.3"]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
           cache: pip
-          cache-dependency-path: requirements.txt
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
       - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Check Python files
-        run: python -m compileall -q main.py
-      - name: Check app import
+        run: pip install -r requirements-dev.txt
+      - name: Compile application
+        run: python -m compileall -q main.py api core schemas utils tests
+      - name: Run tests
+        run: python -m pytest -q
+      - name: Check application import
+        env:
+          APP_NAME: Proy Andrea
+          APP_VERSION: 1.0.0
+          API_V1_PREFIX: /api/v1
+          MONGODB_URI: mongodb://localhost:27017
+          MONGODB_DB: proy-andrea
+          MONGODB_COLLECTION: pacientes
         run: python -c "from main import app; print(app.title)"
