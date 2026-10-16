@@ -2,14 +2,7 @@ from datetime import date
 from enum import Enum
 from typing import Annotated
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    EmailStr,
-    Field,
-    StringConstraints,
-    field_validator,
-)
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator
 
 NonEmptyString = Annotated[
     str,
@@ -43,9 +36,7 @@ class PatientCreate(BaseModel):
 
     nombre: NonEmptyString
     apellido: NonEmptyString
-    ci: Annotated[
-        str, StringConstraints(strip_whitespace=True, min_length=3, max_length=30)
-    ]
+    ci: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=30)]
     fecha_nacimiento: date
     telefono: NonEmptyString
     email: EmailStr
