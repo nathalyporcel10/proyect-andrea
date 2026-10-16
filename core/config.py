@@ -35,7 +35,13 @@ class Settings(BaseSettings):
     @classmethod
     def clean_uri(cls, value: str) -> str:
         if isinstance(value, str):
-            return value.strip().strip('"\'').strip()
+            value = value.strip()
+            if "=" in value and not value.startswith("mongodb"):
+                value = value.split("=", 1)[1].strip()
+            value = value.strip().strip('"\'“”‘’').strip()
+            idx = value.find("mongodb")
+            if idx != -1:
+                value = value[idx:].strip().strip('"\'“”‘’').strip()
         return value
 
     @field_validator("mongodb_db", mode="before")

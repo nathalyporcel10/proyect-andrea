@@ -14,7 +14,13 @@ _ci_index_created = False
 def get_client() -> MongoClient:
     global _client
     if _client is None:
-        clean_uri = settings.mongodb_uri.strip().strip('"\'').strip()
+        clean_uri = settings.mongodb_uri.strip()
+        if "=" in clean_uri and not clean_uri.startswith("mongodb"):
+            clean_uri = clean_uri.split("=", 1)[1].strip()
+        clean_uri = clean_uri.strip().strip('"\'“”‘’').strip()
+        idx = clean_uri.find("mongodb")
+        if idx != -1:
+            clean_uri = clean_uri[idx:].strip().strip('"\'“”‘’').strip()
         _client = MongoClient(clean_uri, serverSelectionTimeoutMS=5000)
     return _client
 
