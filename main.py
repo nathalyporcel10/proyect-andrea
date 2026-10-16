@@ -70,5 +70,5 @@ async def database_error_handler(_: Request, exc: PyMongoError) -> JSONResponse:
     )
     return JSONResponse(
         status_code=503,
-        content={"detail": "No se pudo completar la operación en la base de datos."},
+        content={"detail": f"Error BD: {type(exc).__name__} - {str(exc)}"},
     )
