@@ -5,6 +5,7 @@ venv/
 # Environment files and secrets
 .env
 .env.*
+!.env.example
 
 # Python cache and compiled files
 __pycache__/
