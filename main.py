@@ -48,8 +48,15 @@ def inicio() -> dict[str, str]:
 
 
 @app.get("/health", tags=["Inicio"])
-def health() -> dict[str, str]:
-    return {"estado": "ok"}
+def health() -> dict:
+    import os
+    env_keys = [k for k in os.environ.keys() if any(w in k.upper() for w in ("MONGO", "ATLAS", "DATABASE", "URI", "URL"))]
+    return {
+        "estado": "ok",
+        "has_custom_uri": settings.mongodb_uri != "mongodb://localhost:27017",
+        "db_name": settings.mongodb_db,
+        "env_keys_present": env_keys,
+    }
 
 
 @app.exception_handler(DuplicateKeyError)
