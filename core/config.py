@@ -1,6 +1,6 @@
 import os
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -30,6 +30,20 @@ class Settings(BaseSettings):
         ),
     )
     mongodb_collection: str = "pacientes"
+
+    @field_validator("mongodb_uri", mode="before")
+    @classmethod
+    def clean_uri(cls, value: str) -> str:
+        if isinstance(value, str):
+            return value.strip().strip('"\'').strip()
+        return value
+
+    @field_validator("mongodb_db", mode="before")
+    @classmethod
+    def clean_db(cls, value: str) -> str:
+        if isinstance(value, str):
+            return value.strip().strip('"\'').strip()
+        return value
 
     model_config = SettingsConfigDict(
         env_file=".env",
