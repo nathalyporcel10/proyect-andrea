@@ -6,6 +6,10 @@ on:
   push:
     branches: [main, dev]
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -22,7 +26,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -33,10 +37,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
       - name: Compile application
-        run: python -m compileall -q main.py api core schemas utils tests
+        run: python -m compileall -q main.py api core schemas utils
       - name: Run tests
         run: python -m pytest -q
-      - name: Check application import
+      - name: Check application routes
         env:
           APP_NAME: Proy Andrea
           APP_VERSION: 1.0.0
@@ -44,4 +48,10 @@ jobs:
           MONGODB_URI: mongodb://localhost:27017
           MONGODB_DB: proy-andrea
           MONGODB_COLLECTION: pacientes
-        run: python -c "from main import app; print(app.title)"
+        run: |
+          python - <<'PY'
+          from main import app
+
+          routes = app.openapi()["paths"]
+          print(f"Application loaded with {len(routes)} documented paths")
+          PY
