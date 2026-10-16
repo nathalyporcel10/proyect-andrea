@@ -19,35 +19,32 @@ app = FastAPI(
 
 @app.middleware("http")
 async def fix_vercel_path(request: Request, call_next):
-    path = request.scope.get("path", "")
-    for prefix in ("/api/index.py", "/api/index"):
-        if path == prefix:
-            request.scope["path"] = "/"
-            break
-        elif path.startswith(prefix + "/"):
-            request.scope["path"] = path[len(prefix):]
-            break
+    query_string = request.scope.get("query_string", b"").decode("utf-8")
+    if "__path=" in query_string:
+        from urllib.parse import parse_qs, urlencode
+        qs = parse_qs(query_string)
+        if "__path" in qs:
+            original_path = qs.pop("__path")[0]
+            request.scope["path"] = original_path or "/"
+            request.scope["query_string"] = urlencode(qs, doseq=True).encode("utf-8")
+    else:
+        path = request.scope.get("path", "")
+        for prefix in ("/api/index.py", "/api/index"):
+            if path == prefix:
+                request.scope["path"] = "/"
+                break
+            elif path.startswith(prefix + "/"):
+                request.scope["path"] = path[len(prefix):]
+                break
     return await call_next(request)
 
 
 app.include_router(patients_router, prefix=settings.api_v1_prefix)
 
 
-@app.get("/debug-path", tags=["Inicio"])
-def debug_path(request: Request) -> dict:
-    return {
-        "url_path": request.url.path,
-        "scope_path": request.scope.get("path"),
-    }
-
-
 @app.get("/", tags=["Inicio"])
-def inicio(request: Request) -> dict:
-    return {
-        "mensaje": f"{settings.app_name} está funcionando",
-        "headers": dict(request.headers),
-        "scope": {k: str(v) for k, v in request.scope.items() if k in ("path", "raw_path", "query_string", "root_path")},
-    }
+def inicio() -> dict[str, str]:
+    return {"mensaje": f"{settings.app_name} está funcionando"}
 
 
 @app.get("/health", tags=["Inicio"])
